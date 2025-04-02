@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Weather App</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(to right, #4facfe, #00f2fe);
+            text-align: center;
+            padding: 40px;
+            color: white;
+        }
+        input {
+            padding: 12px;
+            font-size: 16px;
+            border: 2px solid #fff;
+            border-radius: 5px;
+            width: 250px;
+            outline: none;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+        input::placeholder {
+            color: #fff;
+        }
+        button {
+            padding: 12px;
+            font-size: 16px;
+            background-color: #ff9800;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+            margin-left: 5px;
+            transition: 0.3s;
+        }
+        button:hover {
+            background-color: #e68900;
+        }
+        .weather-box {
+            margin-top: 20px;
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            display: inline-block;
+            text-align: left;
+            color: black;
+        }
+        .forecast-box {
+            margin-top: 20px;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 15px;
+            border-radius: 10px;
+            display: inline-block;
+            text-align: center;
+            color: black;
+        }
+        .error-box {
+            color: red;
+            background-color: #ffebee;
+            padding: 10px;
+            border-radius: 5px;
+            display: inline-block;
+            margin-top: 10px;
+        }
+        .weather-box img {
+            width: 80px;
+            height: 80px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Weather Checker</h1>
+    <form method="POST">
+        <input type="text" name="city" placeholder="Enter city (e.g., Gujarat)" required>
+        <button type="submit">Get Weather</button>
+    </form>
+
+    {% if weather %}
+        {% if weather.get("error") %}
+            <div class="error-box">
+                <p>{{ weather["error"] }}</p>
+            </div>
+        {% else %}
+            <div class="weather-box">
+                <h2>{{ weather.city }}, {{ weather.region }}, {{ weather.country }}</h2>
+                <p><strong>Temperature:</strong> {{ weather.temperature }} °C</p>
+                <p><strong>Description:</strong> {{ weather.description }}</p>
+                <p><strong>Humidity:</strong> {{ weather.humidity }}%</p>
+                <p><strong>Wind Speed:</strong> {{ weather.wind }} kph</p>
+                <img src="{{ weather.icon }}" alt="Weather icon">
+            </div>
+
+            {% if forecast %}
+                <h2>5-Day Forecast</h2>
+                {% for day in forecast %}
+                    <div class="forecast-box">
+                        <h3>{{ day.date }}</h3>
+                        <img src="{{ day.day.condition.icon }}" alt="Weather icon">
+                        <p><strong>Temp:</strong> {{ day.day.avgtemp_c }} °C</p>
+                        <p><strong>Condition:</strong> {{ day.day.condition.text }}</p>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endif %}
+    {% endif %}
+
+    <canvas id="hourlyChart" width="400" height="200"></canvas>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const ctx = document.getElementById("hourlyChart").getContext("2d");
+
+            {% if forecast and forecast[0].hour %}
+                const hourlyData = {{ forecast[0].hour | tojson }};
+                const labels = hourlyData.map(h => h.time.split(" ")[1]);
+                const temps = hourlyData.map(h => h.temp_c);
+
+                new Chart(ctx, {
+                    type: "line",
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: "Hourly Temperature",
+                            data: temps,
+                            borderColor: "#ff9800",
+                            backgroundColor: "rgba(255, 152, 0, 0.2)",
+                            fill: true
+                        }]
+                    }
+                });
+            {% else %}
+                console.log("No hourly forecast data available.");
+            {% endif %}
+        });
+    </script>
+</body>
+</html>
