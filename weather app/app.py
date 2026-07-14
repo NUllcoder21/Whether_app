@@ -5,7 +5,7 @@ from datetime import datetime
 app = Flask(__name__)
 app.secret_key = "your_secret_key"
 
-API_KEY = "598e175bfcf945e581b192508253003"
+API_KEY = ""
 DB_FILE = "favorites.db"
 
 # Initialize database
